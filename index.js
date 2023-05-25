@@ -41,17 +41,6 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
 
-// const { tasks } = readJSON()
-
-// tasks.push({
-//   title: 'Cocinar',
-//   id: crypto.randomUUID(),
-// })
-
-// writeJSON(tasks)
-
-// console.log(tasks)
-
 //1. Get all
 app.get('/tasks', (req, res) => {
   const { tasks } = readJSON()
@@ -89,6 +78,21 @@ app.put('/tasks/:title', (req, res) => {
     task.isDone = isDone
     writeJSON(tasks)
     res.status(200).json(task)
+  }
+})
+
+//5. Delete
+app.delete('/tasks/:title', (req, res) => {
+  const { title } = req.params
+  const { tasks } = readJSON()
+  const index = tasks.findIndex((task) => task.title === title)
+
+  if (index === -1) {
+    return res.status(404).json({ message: 'task not found' })
+  } else {
+    tasks.splice(index, 1)
+    writeJSON(tasks)
+    res.status(200).json({ message: 'task succesfuly deleted' })
   }
 })
 
