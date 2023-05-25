@@ -1,8 +1,19 @@
 {
   "tasks": [
     {
-      "title": "Cocinar",
-      "id": "c31febdb-a3c2-42b9-a474-a5ada9eec303"
+      "title": "trapear",
+      "isDone": false,
+      "id": "ef3e965e-017e-41c7-9845-74ebe81666cd"
+    },
+    {
+      "title": "barrer",
+      "isDone": true,
+      "id": "765a4c4f-82a6-41d7-b301-418119db7814"
+    },
+    {
+      "title": "cocinar",
+      "isDone": false,
+      "id": "a0f254a3-30db-498b-9b57-85516822476f"
     }
   ]
 }

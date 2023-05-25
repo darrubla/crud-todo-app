@@ -1,6 +1,15 @@
+const express = require('express')
+const app = express()
 const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
+
+app.use(express.json())
+app.use(
+  express.urlencoded({
+    extended: true,
+  })
+)
 
 const pathJSON = path.join(__dirname, './db.json')
 
@@ -27,13 +36,73 @@ const writeJSON = (data) => {
   fs.writeFileSync(pathJSON, JSON.stringify(template, null, 2), 'utf-8')
 }
 
-const { tasks } = readJSON()
-
-tasks.push({
-  title: 'Cocinar',
-  id: crypto.randomUUID(),
+const PORT = 3001
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
 })
 
-writeJSON(tasks)
+// const { tasks } = readJSON()
 
-console.log(tasks)
+// tasks.push({
+//   title: 'Cocinar',
+//   id: crypto.randomUUID(),
+// })
+
+// writeJSON(tasks)
+
+// console.log(tasks)
+
+//1. Get all
+app.get('/tasks', (req, res) => {
+  const { tasks } = readJSON()
+  res.status(200).json(tasks)
+})
+
+//2. Post (Se envía el body)
+app.post('/tasks', (req, res) => {
+  const { body } = req
+  const { tasks } = readJSON()
+  const exist = tasks.find((task) => task.title === body.title)
+  if (exist) {
+    res.status(401).json({ message: 'Already exists a task with this title' })
+  } else {
+    tasks.push({
+      title: body.title,
+      isDone: false,
+      id: crypto.randomUUID(),
+    })
+    writeJSON(tasks)
+    res.status(201).json(body)
+  }
+})
+
+//3. Put (Se envía el body)
+app.put('/tasks/:title', (req, res) => {
+  const { title } = req.params
+  const { isDone } = req.body
+  const { tasks } = readJSON()
+  const task = tasks.find((task) => task.title === title)
+
+  if (!task) {
+    return res.status(404).json({ message: 'task not found' })
+  } else {
+    task.isDone = isDone
+    writeJSON(tasks)
+    res.status(200).json(task)
+  }
+})
+
+app.use((req, res, next) => {
+  next({
+    statusCode: 404,
+    message: 'Route Not Found',
+  })
+})
+
+app.use((err, req, res, next) => {
+  const { statusCode = 500, message = 'Error' } = err
+  res.status(statusCode)
+  res.json({
+    message,
+  })
+})
