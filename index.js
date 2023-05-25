@@ -4,12 +4,18 @@ const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
 
+const PORT = process.env.PORT || 3500
+
 app.use(express.json())
 app.use(
   express.urlencoded({
     extended: true,
   })
 )
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
+})
 
 const pathJSON = path.join(__dirname, './db.json')
 
@@ -35,11 +41,6 @@ const writeJSON = (data) => {
   }
   fs.writeFileSync(pathJSON, JSON.stringify(template, null, 2), 'utf-8')
 }
-
-const PORT = 3001
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
-})
 
 //1. Get all
 app.get('/tasks', (req, res) => {
