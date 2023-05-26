@@ -1,10 +1,12 @@
 const express = require('express')
 const app = express()
-const fs = require('fs')
-const path = require('path')
-const crypto = require('crypto')
 
-const PORT = process.env.PORT || 3500
+let items = [
+  {
+    name: 'aceite',
+    price: 2500,
+  },
+]
 
 app.use(express.json())
 app.use(
@@ -13,87 +15,67 @@ app.use(
   })
 )
 
+const PORT = process.env.PORT || 3500
+
+const normalizeString = (str) => str.toLowerCase().replaceAll('-', ' ')
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
 
-const pathJSON = path.join(__dirname, './db.json')
-
-const readJSON = () => {
-  const template = {
-    tasks: [],
-  }
-  try {
-    const data = fs.readFileSync(pathJSON, 'utf8')
-    if (!data.length) {
-      return template
-    }
-  } catch (err) {
-    fs.writeFileSync(pathJSON, JSON.stringify(template, null, 2), 'utf-8')
-  }
-  const data = fs.readFileSync(pathJSON, 'utf8')
-  return JSON.parse(data)
-}
-
-const writeJSON = (data) => {
-  const template = {
-    tasks: data,
-  }
-  fs.writeFileSync(pathJSON, JSON.stringify(template, null, 2), 'utf-8')
-}
-
 //1. Get all
-app.get('/tasks', (req, res) => {
-  const { tasks } = readJSON()
-  res.status(200).json(tasks)
+app.get('/items', (req, res) => {
+  res.json(items)
 })
 
 //2. Post (Se envía el body)
-app.post('/tasks', (req, res) => {
+app.post('/items', (req, res) => {
   const { body } = req
-  const { tasks } = readJSON()
-  const exist = tasks.find((task) => task.title === body.title)
+  const exist = items.find((item) => item.name === body.name)
+
   if (exist) {
-    res.status(401).json({ message: 'Already exists a task with this title' })
+    res.status(401).json({ message: 'Already exists an item with this name' })
   } else {
-    tasks.push({
-      title: body.title,
-      isDone: false,
-      id: crypto.randomUUID(),
+    items.push({
+      name: body.name.toLowerCase(),
+      price: body.price,
     })
-    writeJSON(tasks)
     res.status(201).json(body)
   }
 })
 
 //3. Put (Se envía el body)
-app.put('/tasks/:title', (req, res) => {
-  const { title } = req.params
-  const { isDone } = req.body
-  const { tasks } = readJSON()
-  const task = tasks.find((task) => task.title === title)
+app.put('/items/:name', (req, res) => {
+  const { name } = req.params
+  const { price, name: newName } = req.body
+  const item = items.find((item) => item.name === normalizeString(name))
+  const itemIdx = items.findIndex((item) => item.name === normalizeString(name))
+  const duplicated = items.find((item) => item.name === newName)
+  const duplicatedIdx = items.findIndex((item) => item.name === newName)
 
-  if (!task) {
-    return res.status(404).json({ message: 'task not found' })
+  if (!item) {
+    return res.status(404).json({ message: 'Item not found' })
+  } else if (duplicated && itemIdx !== duplicatedIdx) {
+    return res
+      .status(401)
+      .json({ message: 'Already exists an item with that name' })
   } else {
-    task.isDone = isDone
-    writeJSON(tasks)
-    res.status(200).json(task)
+    item.name = newName
+    item.price = price
+    return res.status(200).json(item)
   }
 })
 
-//5. Delete
-app.delete('/tasks/:title', (req, res) => {
-  const { title } = req.params
-  const { tasks } = readJSON()
-  const index = tasks.findIndex((task) => task.title === title)
+//4. Delete
+app.delete('/items/:name', (req, res) => {
+  const { name } = req.params
+  const index = items.findIndex((item) => item.name === normalizeString(name))
 
   if (index === -1) {
-    return res.status(404).json({ message: 'task not found' })
+    return res.status(404).json({ message: 'item not found' })
   } else {
-    tasks.splice(index, 1)
-    writeJSON(tasks)
-    res.status(200).json({ message: 'task succesfuly deleted' })
+    items.splice(index, 1)
+    res.status(204).json({ message: 'item succesfuly deleted' })
   }
 })
 
