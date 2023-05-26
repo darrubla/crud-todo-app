@@ -17,8 +17,6 @@ app.use(
 
 const PORT = process.env.PORT || 3500
 
-const normalizeString = (str) => str.toLowerCase().replaceAll('-', ' ')
-
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
@@ -48,8 +46,9 @@ app.post('/items', (req, res) => {
 app.put('/items/:name', (req, res) => {
   const { name } = req.params
   const { price, name: newName } = req.body
-  const item = items.find((item) => item.name === normalizeString(name))
-  const itemIdx = items.findIndex((item) => item.name === normalizeString(name))
+  const normalizedName = name.toLowerCase().replaceAll('-', ' ')
+  const item = items.find((item) => item.name === normalizedName)
+  const itemIdx = items.findIndex((item) => item.name === normalizedName)
   const duplicated = items.find((item) => item.name === newName)
   const duplicatedIdx = items.findIndex((item) => item.name === newName)
 
@@ -69,7 +68,8 @@ app.put('/items/:name', (req, res) => {
 //4. Delete
 app.delete('/items/:name', (req, res) => {
   const { name } = req.params
-  const index = items.findIndex((item) => item.name === normalizeString(name))
+  const normalizedName = name.toLowerCase().replaceAll('-', ' ')
+  const index = items.findIndex((item) => item.name === normalizedName)
 
   if (index === -1) {
     return res.status(404).json({ message: 'item not found' })
